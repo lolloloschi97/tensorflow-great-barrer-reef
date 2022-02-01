@@ -46,6 +46,8 @@ def main():
         print('Creating label files...')
         print('Labels created')
         print("Dataset ready!")
+
+    # Dataset class initialization
     data_mi_transforms = {'train': transforms.Compose([transforms.ToTensor()]),
                           'val': transforms.Compose([transforms.ToTensor()])}
 
@@ -60,7 +62,23 @@ def main():
                                           ext_annotations="txt",
                                           transforms=data_mi_transforms['val'])
 
+    # visualize image
     show_img(data_mi_train)
+
+    # Data loaders
+    loader_mi_train = torch.utils.data.DataLoader(data_mi_train,
+                                                  batch_size= BATCH_SIZE,
+                                                  shuffle=True,
+                                                  pin_memory=True,
+                                                  num_workers= NUM_WORKER,
+                                                  collate_fn= collate_fn)
+
+    loader_mi_val = torch.utils.data.DataLoader(data_mi_val,
+                                                batch_size= BATCH_SIZE,
+                                                shuffle=False,
+                                                num_workers= NUM_WORKER,
+                                                collate_fn= collate_fn)
+    yolo_v5 =
 
 if __name__ == '__main__':
     main()

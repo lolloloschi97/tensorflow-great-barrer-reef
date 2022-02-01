@@ -14,4 +14,6 @@ IMAGES_ROOT = "/images/"
 LABELS_ROOT = "/labels/"
 TRAIN_ROOT = "../train/"
 VALIDATION_ROOT = "../validation/"
+BATCH_SIZE = 128
+NUM_WORKER = 2
 TRAIN_SIZE = 0.6

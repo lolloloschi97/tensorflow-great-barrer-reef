@@ -53,6 +53,9 @@ def parse_annotations_file(path_to_file: str):
             boxes.append(coordinates)
     return obj_classes, boxes
 
+def collate_fn(batch):
+    return tuple(zip(*batch))
+
 
 class GreatBarrerReef_Dataset(Dataset):
     def __init__(self,
