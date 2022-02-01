@@ -27,3 +27,5 @@ def images_folder(df, destination_path):
     for f in df_files:
         shutil.move(f, destination_path)
 
+
+

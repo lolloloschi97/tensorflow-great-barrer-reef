@@ -1,6 +1,6 @@
-# This is the main function.
 from data_loader import *
 from hyper_param import *
+from dataset_class_generation import *
 
 
 LOAD_PICKELS = True
@@ -26,7 +26,6 @@ def save_datasets(train_df, val_df):
     print("Images moved")
 
 
-
 def load_datasets():
     print("Loading datasets...")
     train_set = pd.read_pickle(TRAIN_ROOT + DATAFRAME_ROOT + "training_dataframe.pkl")
@@ -40,8 +39,30 @@ def main():
     else:
         training_df, validation_df = data_loader(TRAIN_SIZE)
         save_datasets(training_df, validation_df)
-        print()
+        print('Creating label files...')
+        create_annotations(TRAIN_ROOT, "training.csv")
+        create_annotations(VALIDATION_ROOT, "validation.csv")
+        print('Labels created')
         print("Dataset ready!")
+
+    data_mi_transforms = {'train': transforms.Compose([transforms.ToTensor()]),
+                          'val': transforms.Compose([transforms.ToTensor()])}
+
+
+    data_mi_train = GreatBarrerReef_Dataset(path_folder= TRAIN_ROOT,
+                                            ext_images="jpg",
+                                            ext_annotations="txt",
+                                            transforms=data_mi_transforms['train'])
+
+    data_mi_val = GreatBarrerReef_Dataset(path_folder=VALIDATION_ROOT,
+                                          ext_images="jpg",
+                                          ext_annotations="txt",
+                                          transforms=data_mi_transforms['val'])
+
+    classes_mi = data_mi_train.classes
+    num_mi_classes = len(classes_mi)
+    print(num_mi_classes)
+    print(data_mi_val)
 
 
 if __name__ == '__main__':
