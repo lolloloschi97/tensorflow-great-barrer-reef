@@ -1,5 +1,6 @@
 from data_loader import *
 from hyper_param import *
+from visualization import *
 from dataset_class_generation import *
 
 
@@ -36,15 +37,15 @@ def load_datasets():
 def main():
     if LOAD_PICKELS:
         training_df, validation_df = load_datasets()
+
     else:
         training_df, validation_df = data_loader(TRAIN_SIZE)
         save_datasets(training_df, validation_df)
-        print('Creating label files...')
         create_annotations(TRAIN_ROOT, "training.csv")
         create_annotations(VALIDATION_ROOT, "validation.csv")
+        print('Creating label files...')
         print('Labels created')
         print("Dataset ready!")
-
     data_mi_transforms = {'train': transforms.Compose([transforms.ToTensor()]),
                           'val': transforms.Compose([transforms.ToTensor()])}
 
@@ -61,8 +62,28 @@ def main():
 
     classes_mi = data_mi_train.classes
     num_mi_classes = len(classes_mi)
-    print(num_mi_classes)
-    print(data_mi_val)
+    index_sample = 9
+    colors_mi = generate_colors(num_mi_classes)
+
+    image, target = data_mi_train[index_sample]
+    print(data_mi_train.images[index_sample])
+    boxes = target['boxes']
+    labels = target['labels']
+    classes = [data_mi_train.classes[l.item()] for l in labels]
+    image = transforms.ToPILImage()(image)
+    cell_with_bb = draw_boxes(image,
+                              boxes=boxes,
+                              classes=classes,
+                              labels=labels,
+                              scores=[1.0] * len(boxes),
+                              colors=colors_mi,
+                              normalized_coordinates=False)
+
+    plt.imshow(cell_with_bb)
+    plt.tight_layout(pad=0)
+    plt.margins(x=0)
+    plt.axis("off")
+    plt.show()
 
 
 if __name__ == '__main__':
