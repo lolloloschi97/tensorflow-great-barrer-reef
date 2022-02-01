@@ -2,7 +2,8 @@ from hyper_param import *
 from PIL import Image, ImageDraw, ImageFont
 import time
 import copy
-
+from typing import List
+from torchvision import transforms
 
 def generate_colors(num_colors: int) -> np.array:
     """Generates an array with RGB triplets representing colors.
@@ -54,8 +55,7 @@ def draw_boxes(image: Image,
     painter = ImageDraw.Draw(image_with_bb)
 
     for i, (box, label) in enumerate(zip(boxes, labels)):
-        #color = tuple(colors[label].astype(np.int32))
-        color='red'
+        color = 'red'
         x_min, y_min, x_max, y_max = box
 
         if normalized_coordinates:
@@ -71,4 +71,30 @@ def draw_boxes(image: Image,
 
     return image_with_bb
 
+def show_img(data,index_sample=9):
+
+    classes_mi = data.classes
+    num_mi_classes = len(classes_mi)
+    colors_mi = generate_colors(num_mi_classes)
+
+    image, target = data[index_sample]
+    print(data.images[index_sample])
+    boxes = target['boxes']
+    labels = target['labels']
+    classes = [data.classes[l.item()] for l in labels]
+    image = transforms.ToPILImage()(image)
+    cell_with_bb = draw_boxes(image,
+                              boxes=boxes,
+                              classes=classes,
+                              labels=labels,
+                              scores=[1.0] * len(boxes),
+                              colors=colors_mi,
+                              normalized_coordinates=False)
+
+    fig, ax = plt.subplots()
+    ax = plt.Axes(fig, [0., 0., 1., 1.])
+    ax.set_axis_off()
+    fig.add_axes(ax)
+    ax.imshow(cell_with_bb, aspect='auto')
+    plt.show()
 

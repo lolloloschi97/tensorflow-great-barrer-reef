@@ -60,31 +60,7 @@ def main():
                                           ext_annotations="txt",
                                           transforms=data_mi_transforms['val'])
 
-    classes_mi = data_mi_train.classes
-    num_mi_classes = len(classes_mi)
-    index_sample = 9
-    colors_mi = generate_colors(num_mi_classes)
-
-    image, target = data_mi_train[index_sample]
-    print(data_mi_train.images[index_sample])
-    boxes = target['boxes']
-    labels = target['labels']
-    classes = [data_mi_train.classes[l.item()] for l in labels]
-    image = transforms.ToPILImage()(image)
-    cell_with_bb = draw_boxes(image,
-                              boxes=boxes,
-                              classes=classes,
-                              labels=labels,
-                              scores=[1.0] * len(boxes),
-                              colors=colors_mi,
-                              normalized_coordinates=False)
-
-    plt.imshow(cell_with_bb)
-    plt.tight_layout(pad=0)
-    plt.margins(x=0)
-    plt.axis("off")
-    plt.show()
-
+    show_img(data_mi_train)
 
 if __name__ == '__main__':
     main()
