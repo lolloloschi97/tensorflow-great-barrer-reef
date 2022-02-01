@@ -4,6 +4,8 @@ import torch
 import torchvision
 import pickle
 import json
+from matplotlib import pyplot as plt
+from typing import Callable, Dict, List, Tuple, Union
 
 UTILS_ROOT = "../utils/"
 DATASET_ROOT = "../dataset/"
