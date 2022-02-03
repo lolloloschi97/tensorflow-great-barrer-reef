@@ -6,11 +6,11 @@ from PIL import Image
 
 
 def obtain_corners(bbox):
-    xmin = bbox['x']
-    ymin = bbox['y']
-    xmax = xmin + bbox['width']
-    ymax = ymin + bbox['height']
-    return xmin, ymin, xmax, ymax
+    x_center = (bbox['x'] + int(bbox['width']/2)) / IMAGE_WIDTH
+    y_center = (bbox['y'] + int(bbox['height']/2)) / IMAGE_HEIGHT
+    w = bbox['width'] / IMAGE_WIDTH
+    h = bbox['height'] / IMAGE_HEIGHT
+    return x_center, y_center, w, h
 
 def create_annotations(df_path,df_name):
     df_training = pd.read_csv(df_path + DATAFRAME_ROOT + df_name)

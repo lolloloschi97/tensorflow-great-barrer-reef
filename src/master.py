@@ -37,7 +37,8 @@ def load_datasets():
 def main():
     if LOAD_PICKELS:
         training_df, validation_df = load_datasets()
-
+        create_annotations(TRAIN_ROOT, "training.csv")
+        create_annotations(VALIDATION_ROOT, "validation.csv")
     else:
         training_df, validation_df = data_loader(TRAIN_SIZE)
         save_datasets(training_df, validation_df)
@@ -78,7 +79,8 @@ def main():
                                                 shuffle=False,
                                                 num_workers= NUM_WORKER,
                                                 collate_fn= collate_fn)
-    yolo_v5 =
+    #yolo_v5 =
+
 
 if __name__ == '__main__':
     main()

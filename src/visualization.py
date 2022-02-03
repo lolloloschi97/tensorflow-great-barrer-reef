@@ -22,6 +22,12 @@ def generate_colors(num_colors: int) -> np.array:
 
     return colors
 
+def obtain_initial_coordinates(bbox):
+    xmin = int((bbox[0] - (bbox[2] / 2)) * IMAGE_WIDTH)
+    ymin = int((bbox[1] - (bbox[3] / 2)) * IMAGE_HEIGHT)
+    xmax = int((bbox[0] + (bbox[2] / 2)) * IMAGE_WIDTH)
+    ymax = int((bbox[1] + (bbox[3] / 2)) * IMAGE_HEIGHT)
+    return xmin, ymin, xmax, ymax
 
 def draw_boxes(image: Image,
                boxes: List[List[float]],
@@ -56,7 +62,7 @@ def draw_boxes(image: Image,
 
     for i, (box, label) in enumerate(zip(boxes, labels)):
         color = 'red'
-        x_min, y_min, x_max, y_max = box
+        x_min, y_min, x_max, y_max = obtain_initial_coordinates(box)
 
         if normalized_coordinates:
             width, height = image.size
