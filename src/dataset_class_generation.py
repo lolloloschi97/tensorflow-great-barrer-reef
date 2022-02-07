@@ -4,13 +4,20 @@ from torchvision import transforms
 from pathlib import Path
 from PIL import Image
 
-
-def obtain_corners(bbox):
+def obtain_corners_yolo(bbox):
     x_center = (bbox['x'] + int(bbox['width']/2)) / IMAGE_WIDTH
     y_center = (bbox['y'] + int(bbox['height']/2)) / IMAGE_HEIGHT
     w = bbox['width'] / IMAGE_WIDTH
     h = bbox['height'] / IMAGE_HEIGHT
     return x_center, y_center, w, h
+
+def obtain_corners(bbox):
+    x_min = bbox['x']
+    y_min = bbox['x']
+    x_max = bbox['x'] + bbox['width']
+    y_max = bbox['x'] + bbox['height']
+
+    return x_min, y_min, x_max, y_max
 
 def create_annotations(df_path,df_name):
     df_training = pd.read_csv(df_path + DATAFRAME_ROOT + df_name)
@@ -24,8 +31,11 @@ def create_annotations(df_path,df_name):
         else:
             file = open(df_path + "labels/" + image_id + ".txt", mode="w")
             for ann in range(len(annotations)):
-                xmin, ymin, xmax, ymax = obtain_corners(annotations[ann])
-                file.write("Starfish " + str(xmin) + " " + str(ymin) + " " + str(xmax) + " " + str(ymax) + "\n")
+                # xmin, ymin, xmax, ymax = obtain_corners_yolo(annotations[ann])
+                #file.write("Starfish " + str(xmin) + " " + str(ymin) + " " + str(xmax) + " " + str(ymax) + "\n")
+
+                x_center, y_center, w, h = obtain_corners_yolo(annotations[ann])
+                file.write("Starfish " + str(x_center) + " " + str(y_center) + " " + str(w) + " " + str(h) + "\n")
 
 def parse_annotations_file(path_to_file: str):
     """Parse annotation file generated with the OIDv4 ToolKit.

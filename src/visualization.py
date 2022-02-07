@@ -62,6 +62,7 @@ def draw_boxes(image: Image,
 
     for i, (box, label) in enumerate(zip(boxes, labels)):
         color = 'red'
+        # x_min, y_min, x_max, y_max = box
         x_min, y_min, x_max, y_max = obtain_initial_coordinates(box)
 
         if normalized_coordinates:
