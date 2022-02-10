@@ -20,6 +20,8 @@ VALIDATION_ROOT = "../validation/"
 #image dimensions
 IMAGE_WIDTH = 1280
 IMAGE_HEIGHT = 720
+RESHAPE = True
+RESHAPE_FACTOR = 4
 
 # training parameters
 EPOCHS = 10

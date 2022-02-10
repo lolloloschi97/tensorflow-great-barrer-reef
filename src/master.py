@@ -1,7 +1,7 @@
 from data_loader import *
 from hyper_param import *
 from visualization import *
-#from model_definition_yolo import yolo, execute
+from evaluation import launch_tensorboard
 from model_definition_retinanet import retina_net, execute
 from dataset_class_generation import *
 
@@ -50,8 +50,12 @@ def main():
         print("Dataset ready!")
 
     # Dataset class initialization
-    data_mi_transforms = {'train': transforms.Compose([transforms.ToTensor(), transforms.Resize((320,180))]),
-                          'val': transforms.Compose([transforms.ToTensor(), transforms.Resize((320,180))])}
+
+    resized_height = int(IMAGE_HEIGHT/RESHAPE_FACTOR)
+    resized_width = int(IMAGE_WIDTH/RESHAPE_FACTOR)
+    #transforms.Resize((resized_height, resized_width))
+    data_mi_transforms = {'train': transforms.Compose([transforms.ToTensor(),transforms.Resize((resized_height, resized_width))]),
+                          'val': transforms.Compose([transforms.ToTensor(),transforms.Resize((resized_height, resized_width))])}
 
 
     data_mi_train = GreatBarrerReef_Dataset(path_folder= TRAIN_ROOT,
@@ -66,6 +70,8 @@ def main():
 
     # visualize image
     show_img(data_mi_train)
+    quit()
+
 
     # Data loaders
     loader_mi_train = torch.utils.data.DataLoader(data_mi_train,
@@ -82,10 +88,8 @@ def main():
                                                 collate_fn= collate_fn)
 
     name_train = "retina_net"
+    launch_tensorboard(name_train)
     execute(name_train, retina_net, LR, EPOCHS, loader_mi_train, loader_mi_val)
-
-    #name_train = "yolov5"
-    #model = execute(name_train, yolo, LR, EPOCHS, loader_mi_train, loader_mi_val)
 
 
 if __name__ == '__main__':

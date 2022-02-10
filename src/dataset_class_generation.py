@@ -3,6 +3,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from pathlib import Path
 from PIL import Image
+from hyper_param import *
 
 def obtain_corners_yolo(bbox):
     x_center = (bbox['x'] + int(bbox['width']/2)) / IMAGE_WIDTH
@@ -13,9 +14,14 @@ def obtain_corners_yolo(bbox):
 
 def obtain_corners(bbox):
     x_min = bbox['x']
-    y_min = bbox['x']
+    y_min = bbox['y']
     x_max = bbox['x'] + bbox['width']
-    y_max = bbox['x'] + bbox['height']
+    y_max = bbox['y'] + bbox['height']
+    if RESHAPE:
+        x_min = int(x_min / RESHAPE_FACTOR)
+        y_min = int(y_min / RESHAPE_FACTOR)
+        x_max = int(x_max / RESHAPE_FACTOR)
+        y_max = int(y_max / RESHAPE_FACTOR)
 
     return x_min, y_min, x_max, y_max
 

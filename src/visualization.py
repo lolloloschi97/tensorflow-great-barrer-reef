@@ -56,7 +56,7 @@ def draw_boxes(image: Image,
     Returns:
         The generated image.
     """
-    font = ImageFont.truetype('C:\Windows\Font/arial.ttf', 25)
+    font = ImageFont.truetype('C:\Windows\Font/arial.ttf', 8)
     image_with_bb = copy.deepcopy(image)
     painter = ImageDraw.Draw(image_with_bb)
 
@@ -65,27 +65,19 @@ def draw_boxes(image: Image,
         x_min, y_min, x_max, y_max = box
         # x_min, y_min, x_max, y_max = obtain_initial_coordinates(box)
 
-        if normalized_coordinates:
-            width, height = image.size
-            x_min *= width
-            y_min *= height
-            x_max *= width
-            y_max *= height
-
         coord_bb = [int(x_min), int(y_min), int(x_max), int(y_max)]
-        painter.rectangle(coord_bb, outline=color, width=4)
-        painter.text((x_min, y_min - 30), text="Starfish", fill=color, font=font)
+        painter.rectangle(coord_bb, outline=color, width=2)
+
+        painter.text((x_min, y_min - 7), text="Starfish", fill=color, font=font)
 
     return image_with_bb
 
 def show_img(data,index_sample=9):
-
     classes_mi = data.classes
     num_mi_classes = len(classes_mi)
     colors_mi = generate_colors(num_mi_classes)
 
     image, target = data[index_sample]
-    print(data.images[index_sample])
     boxes = target['boxes']
     labels = target['labels']
     classes = [data.classes[l.item()] for l in labels]

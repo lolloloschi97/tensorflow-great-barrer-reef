@@ -13,7 +13,7 @@ from PIL import Image
 from torch.optim import lr_scheduler
 from torch.utils.tensorboard import SummaryWriter
 
-def train(writer: utils.tensorboard.writer.SummaryWriter,
+def train(writer: SummaryWriter,
           model: nn.Module,
           train_loader: utils.data.DataLoader,
           device: torch.device,
