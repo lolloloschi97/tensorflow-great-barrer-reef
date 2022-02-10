@@ -24,7 +24,7 @@ IMAGE_HEIGHT = 720
 # training parameters
 EPOCHS = 10
 LR = 1e-5
-BATCH_SIZE = 128
+BATCH_SIZE = 4
 NUM_WORKER = 2
 TRAIN_SIZE = 0.6
 DEVICE = 'cpu'

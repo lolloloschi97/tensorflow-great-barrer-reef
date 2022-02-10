@@ -62,8 +62,8 @@ def draw_boxes(image: Image,
 
     for i, (box, label) in enumerate(zip(boxes, labels)):
         color = 'red'
-        # x_min, y_min, x_max, y_max = box
-        x_min, y_min, x_max, y_max = obtain_initial_coordinates(box)
+        x_min, y_min, x_max, y_max = box
+        # x_min, y_min, x_max, y_max = obtain_initial_coordinates(box)
 
         if normalized_coordinates:
             width, height = image.size
@@ -72,7 +72,7 @@ def draw_boxes(image: Image,
             x_max *= width
             y_max *= height
 
-        coord_bb = [x_min, y_min, x_max, y_max]
+        coord_bb = [int(x_min), int(y_min), int(x_max), int(y_max)]
         painter.rectangle(coord_bb, outline=color, width=4)
         painter.text((x_min, y_min - 30), text="Starfish", fill=color, font=font)
 

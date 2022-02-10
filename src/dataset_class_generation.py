@@ -27,15 +27,15 @@ def create_annotations(df_path,df_name):
         annotations = json.loads(annotations.replace("'",'"'))
         if len(annotations) == 0:
             file = open(df_path + "labels/" + image_id + ".txt", mode="w")
-            file.write("")
+            file.write("__background__ 1 2 3 4")
         else:
             file = open(df_path + "labels/" + image_id + ".txt", mode="w")
             for ann in range(len(annotations)):
-                # xmin, ymin, xmax, ymax = obtain_corners_yolo(annotations[ann])
-                #file.write("Starfish " + str(xmin) + " " + str(ymin) + " " + str(xmax) + " " + str(ymax) + "\n")
+                xmin, ymin, xmax, ymax = obtain_corners(annotations[ann])
+                file.write("Starfish " + str(xmin) + " " + str(ymin) + " " + str(xmax) + " " + str(ymax) + "\n")
 
-                x_center, y_center, w, h = obtain_corners_yolo(annotations[ann])
-                file.write("Starfish " + str(x_center) + " " + str(y_center) + " " + str(w) + " " + str(h) + "\n")
+                #x_center, y_center, w, h = obtain_corners_yolo(annotations[ann])
+                #file.write("Starfish " + str(x_center) + " " + str(y_center) + " " + str(w) + " " + str(h) + "\n")
 
 def parse_annotations_file(path_to_file: str):
     """Parse annotation file generated with the OIDv4 ToolKit.

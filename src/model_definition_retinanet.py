@@ -118,7 +118,7 @@ def training_loop(writer: SummaryWriter,
             num_epochs: the number of epochs.
             optimizer: the optimizer to use.
             lr_scheduler: the scheduler for the learning rate.
-            log_interval: intervall to print on tensorboard.
+            log_interval: interval to print on tensorboard.
             model: the model to train.
             loader_train: the data loader containing the training data.
             loader_val: the data loader containing the validation data.
@@ -280,7 +280,7 @@ def execute(name_train: str,
 
     statistics = training_loop(writer, num_epochs, optimizer, scheduler,
                                log_interval, model, data_loader_train,
-                               data_loader_val)
+                               verbose = True)
     writer.close()
 
     # Save the model

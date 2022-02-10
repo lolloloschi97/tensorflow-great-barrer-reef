@@ -1,7 +1,7 @@
 from data_loader import *
 from hyper_param import *
 from visualization import *
-from model_definition_yolo import yolo, execute
+#from model_definition_yolo import yolo, execute
 from model_definition_retinanet import retina_net, execute
 from dataset_class_generation import *
 
@@ -39,8 +39,7 @@ def load_datasets():
 def main():
     if LOAD_PICKELS:
         training_df, validation_df = load_datasets()
-        create_annotations(TRAIN_ROOT, "training.csv")
-        create_annotations(VALIDATION_ROOT, "validation.csv")
+
     else:
         training_df, validation_df = data_loader(TRAIN_SIZE)
         save_datasets(training_df, validation_df)
@@ -82,11 +81,11 @@ def main():
                                                 num_workers= NUM_WORKER,
                                                 collate_fn= collate_fn)
 
-    #name_train = "retina_net"
-    #model = execute(name_train, retina_net, LR, EPOCHS, loader_mi_train, loader_mi_val)
+    name_train = "retina_net"
+    execute(name_train, retina_net, LR, EPOCHS, loader_mi_train, loader_mi_val)
 
-    name_train = "yolov5"
-    model = execute(name_train, yolo, LR, EPOCHS, loader_mi_train, loader_mi_val)
+    #name_train = "yolov5"
+    #model = execute(name_train, yolo, LR, EPOCHS, loader_mi_train, loader_mi_val)
 
 
 if __name__ == '__main__':
