@@ -2,6 +2,8 @@ import torch.nn as nn
 import os
 import torch.utils as utils
 import torchvision.models.detection.backbone_utils as ut
+from tqdm import tqdm
+from time import sleep
 from torchvision.ops.feature_pyramid_network import LastLevelP6P7
 from torchvision.models.detection import RetinaNet
 from torchvision.models.detection.anchor_utils import AnchorGenerator
@@ -38,27 +40,27 @@ def train(writer: utils.tensorboard.writer.SummaryWriter,
     num_batches = len(train_loader)
 
     model.train()
-    for idx_batch, (images, targets) in enumerate(train_loader):
-        optimizer.zero_grad()
-        images = list(image.to(device) for image in images)
-        targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+    with tqdm(train_loader, unit="batch") as tepoch:
+        for idx_batch, (images, targets) in enumerate(tepoch):
+            tepoch.set_description(f"Epoch {epoch}")
+            optimizer.zero_grad()
+            images = list(image.to(device) for image in images)
+            targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+            loss_dict = model(images, targets)
+            loss_class = loss_dict['classification']
+            loss_boxes_regr = loss_dict['bbox_regression']
+            losses = loss_class + loss_boxes_regr
+            losses.backward()
+            optimizer.step()
 
-
-        loss_dict = model(images, targets)
-
-        loss_class = loss_dict['classification']
-        loss_boxes_regr = loss_dict['bbox_regression']
-        losses = loss_class + loss_boxes_regr
-        losses.backward()
-        optimizer.step()
-
-        if log_interval > 0:
-            if idx_batch % log_interval == 0:
-                global_step = idx_batch + (epoch * num_batches)
-                writer.add_scalar('Metrics/Loss_Train_IT_Sum', losses, global_step)
-                writer.add_scalar('Metrics/Loss_Train_IT_Boxes', loss_boxes_regr, global_step)
-                writer.add_scalar('Metrics/Loss_Train_IT_Classification', loss_class, global_step)
-
+            if log_interval > 0:
+                if idx_batch % log_interval == 0:
+                    global_step = idx_batch + (epoch * num_batches)
+                    writer.add_scalar('Metrics/Loss_Train_IT_Sum', losses, global_step)
+                    writer.add_scalar('Metrics/Loss_Train_IT_Boxes', loss_boxes_regr, global_step)
+                    writer.add_scalar('Metrics/Loss_Train_IT_Classification', loss_class, global_step)
+            tepoch.set_postfix(loss=loss_dict.items())
+            sleep(0.1)
     dict_losses_train = {'bbox_regression': loss_boxes_regr,
                          'classification': loss_class,
                          'sum': losses}
@@ -279,7 +281,7 @@ def execute(name_train: str,
     scheduler = lr_scheduler.StepLR(optimizer, step_size=200, gamma=0.1)
 
     statistics = training_loop(writer, num_epochs, optimizer, scheduler,
-                               log_interval, model, data_loader_train,
+                               log_interval, model, data_loader_train, data_loader_val,
                                verbose = True)
     writer.close()
 

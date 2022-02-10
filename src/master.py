@@ -50,8 +50,8 @@ def main():
         print("Dataset ready!")
 
     # Dataset class initialization
-    data_mi_transforms = {'train': transforms.Compose([transforms.ToTensor()]),
-                          'val': transforms.Compose([transforms.ToTensor()])}
+    data_mi_transforms = {'train': transforms.Compose([transforms.ToTensor(), transforms.Resize((320,180))]),
+                          'val': transforms.Compose([transforms.ToTensor(), transforms.Resize((320,180))])}
 
 
     data_mi_train = GreatBarrerReef_Dataset(path_folder= TRAIN_ROOT,
