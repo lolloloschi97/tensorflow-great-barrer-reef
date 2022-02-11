@@ -59,8 +59,10 @@ def train(writer: SummaryWriter,
                     writer.add_scalar('Metrics/Loss_Train_IT_Sum', losses, global_step)
                     writer.add_scalar('Metrics/Loss_Train_IT_Boxes', loss_boxes_regr, global_step)
                     writer.add_scalar('Metrics/Loss_Train_IT_Classification', loss_class, global_step)
-            tepoch.set_postfix(loss=loss_dict.items())
+
+            tepoch.set_postfix(loss = {'classification' : loss_class, 'bbox_regression': loss_boxes_regr, 'sum': losses}.items())
             sleep(0.1)
+
     dict_losses_train = {'bbox_regression': loss_boxes_regr,
                          'classification': loss_class,
                          'sum': losses}

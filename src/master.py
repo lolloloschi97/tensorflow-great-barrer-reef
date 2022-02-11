@@ -70,7 +70,6 @@ def main():
 
     # visualize image
     show_img(data_mi_train)
-    quit()
 
 
     # Data loaders
