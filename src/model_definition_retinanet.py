@@ -334,7 +334,7 @@ def set_requires_grad_for_layer(layer: torch.nn.Module, train: bool) -> None:
 #                          max_size=1333)
 
 retina_net = retinanet_resnet50_fpn(pretrained = False,
-                                    num_classes = 18,
+                                    num_classes = 2,
                                     pretrained_backbone = True,
                                     trainable_backbone_layers = 1)
 
