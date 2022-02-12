@@ -12,7 +12,6 @@ from timeit import default_timer as timer
 from PIL import Image
 from torch.optim import lr_scheduler
 from torch.utils.tensorboard import SummaryWriter
-from torchsummary import summary
 
 def train(writer: SummaryWriter,
           model: nn.Module,
@@ -333,12 +332,14 @@ def set_requires_grad_for_layer(layer: torch.nn.Module, train: bool) -> None:
 #                          min_size=800,
 #                          max_size=1333)
 
-retina_net = retinanet_resnet50_fpn(pretrained = False,
-                                    num_classes = 2,
+retina_net = retinanet_resnet50_fpn(pretrained = True,
+                                    num_classes = 91,
                                     pretrained_backbone = True,
                                     trainable_backbone_layers = 1)
 
+
 retina_net.head.classification_head.cls_logits = nn.Conv2d(256, 18, kernel_size=(3, 3), stride =(1, 1), padding=(1, 1))
+retina_net.head.classification_head.num_classes = 2
 set_requires_grad_for_layer(retina_net.backbone, False)
 set_requires_grad_for_layer(retina_net.anchor_generator, True)
 set_requires_grad_for_layer(retina_net.head.classification_head, True)
