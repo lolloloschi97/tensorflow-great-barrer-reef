@@ -7,15 +7,22 @@ import json
 from matplotlib import pyplot as plt
 from typing import Callable, Dict, List, Tuple, Union
 
+WITH_COLAB = False
 
 # path
-UTILS_ROOT = "../utils/"
-DATASET_ROOT = "../dataset/"
+if WITH_COLAB:
+    UTILS_ROOT = "tensorflow-great-barrer-reef/utils/"
+    DATASET_ROOT = "tensorflow-great-barrer-reef/dataset/"
+    TRAIN_ROOT = "tensorflow-great-barrer-reef/train/"
+    VALIDATION_ROOT = "tensorflow-great-barrer-reef/validation/"
+else:
+    UTILS_ROOT = "../utils/"
+    DATASET_ROOT = "../dataset/"
+    TRAIN_ROOT = "../train/"
+    VALIDATION_ROOT = "../validation/"
 DATAFRAME_ROOT = "/dataframe/"
 IMAGES_ROOT = "/images/"
 LABELS_ROOT = "/labels/"
-TRAIN_ROOT = "../train/"
-VALIDATION_ROOT = "../validation/"
 
 #image dimensions
 IMAGE_WIDTH = 1280

@@ -4,8 +4,10 @@ from sklearn.model_selection import train_test_split
 from hyper_param import *
 
 def data_loader(TRAIN_SIZE):
-    path = UTILS_ROOT + DATASET_ROOT + DATAFRAME_ROOT + "train.csv"
+    path = DATASET_ROOT + DATAFRAME_ROOT + "train.csv"
     df = pd.read_csv(path)
+    if WITH_COLAB:
+        df = df.loc[df['video_id']==0]
     indexes = train_test_split(np.arange(df.shape[0]),train_size = TRAIN_SIZE, random_state = 1) #[[train_indexes],[val_indexes]]
     #val_indexes = [i for i in range(df.shape[0]) if i not in train_indexes]
     training_df = df.loc[indexes[0],:]
@@ -13,7 +15,7 @@ def data_loader(TRAIN_SIZE):
     return training_df, validation_df
 
 def rename_images():
-    for el in [0,1,2]:
+    for el in range(len(os.listdir(DATASET_ROOT + IMAGES_ROOT))):
         path = DATASET_ROOT + IMAGES_ROOT + "video_" + str(el) + "/"
         for image in os.listdir(path):
             old_file_name = path + image

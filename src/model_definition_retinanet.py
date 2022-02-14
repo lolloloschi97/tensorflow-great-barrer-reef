@@ -295,7 +295,6 @@ def execute(name_train: str,
                                    f'{name_train}_{num_epochs}_epochs.bin')
     torch.save(model.state_dict(), path_checkpoint)
 
-
 def set_requires_grad_for_layer(layer: torch.nn.Module, train: bool) -> None:
     """Sets the attribute requires_grad to True or False for each parameter.
 
@@ -307,35 +306,10 @@ def set_requires_grad_for_layer(layer: torch.nn.Module, train: bool) -> None:
         p.requires_grad = train
 
 
-#backbone = ut.resnet_fpn_backbone('resnet34',
-#                                  pretrained = True,
-#                                  trainable_layers = 0,
-#                                  returned_layers=[2, 3, 4],
-#                                  extra_blocks=LastLevelP6P7(256, 256))
-
-
-#sizes_anchors = ((8, 10, 12),
-#                 (16, 20, 25),
-#                 (32, 40, 50),
-#                 (64, 80, 101),
-#                 (128, 161, 203))
-
-#ratios_anchors = ((0.5, 1.0, 2.0),) * len(sizes_anchors)
-
-
-#anchor_generator = AnchorGenerator(sizes=sizes_anchors,
-#                                   aspect_ratios=ratios_anchors)
-
-#retina_net = RetinaNet(backbone,
-#                          2,
-#                          anchor_generator=anchor_generator,
-#                          min_size=800,
-#                          max_size=1333)
-
 retina_net = retinanet_resnet50_fpn(pretrained = True,
                                     num_classes = 91,
                                     pretrained_backbone = True,
-                                    trainable_backbone_layers = 1)
+                                    trainable_backbone_layers = None)
 
 
 retina_net.head.classification_head.cls_logits = nn.Conv2d(256, 18, kernel_size=(3, 3), stride =(1, 1), padding=(1, 1))
@@ -346,5 +320,5 @@ set_requires_grad_for_layer(retina_net.head.classification_head, True)
 set_requires_grad_for_layer(retina_net.head.regression_head, True)
 
 retina_net.to(DEVICE)
-print(retina_net)
+#print(retina_net)
 
