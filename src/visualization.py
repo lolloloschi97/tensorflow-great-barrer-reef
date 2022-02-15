@@ -56,7 +56,11 @@ def draw_boxes(image: Image,
     Returns:
         The generated image.
     """
-    font = ImageFont.truetype('C:\Windows\Font/arial.ttf', 8)
+    if WITH_COLAB:
+        font = ImageFont.truetype('/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf', 8)
+    else:
+        font = ImageFont.truetype('C:\Windows\Font/arial.ttf', 8)
+
     image_with_bb = copy.deepcopy(image)
     painter = ImageDraw.Draw(image_with_bb)
 

@@ -36,4 +36,7 @@ LR = 1e-5
 BATCH_SIZE = 4
 NUM_WORKER = 2
 TRAIN_SIZE = 0.6
-DEVICE = 'cpu'
+if torch.cuda.is_available:
+    DEVICE = torch.device("cuda:0")
+else:
+    DEVICE = 'cpu'
