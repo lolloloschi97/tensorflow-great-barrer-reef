@@ -15,11 +15,13 @@ if WITH_COLAB:
     DATASET_ROOT = "tensorflow-great-barrer-reef/dataset/"
     TRAIN_ROOT = "tensorflow-great-barrer-reef/train/"
     VALIDATION_ROOT = "tensorflow-great-barrer-reef/validation/"
+    CHECKPOINT_ROOT = "tensorflow-great-barrer-reef/checkpoints"
 else:
     UTILS_ROOT = "../utils/"
     DATASET_ROOT = "../dataset/"
     TRAIN_ROOT = "../train/"
     VALIDATION_ROOT = "../validation/"
+    CHECKPOINT_ROOT = "../checkpoints"
 DATAFRAME_ROOT = "/dataframe/"
 IMAGES_ROOT = "/images/"
 LABELS_ROOT = "/labels/"

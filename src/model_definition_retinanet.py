@@ -13,6 +13,56 @@ from PIL import Image
 from torch.optim import lr_scheduler
 from torch.utils.tensorboard import SummaryWriter
 
+import torch
+import torch.nn.functional as F
+
+
+def sigmoid_focal_loss(
+    inputs: torch.Tensor,
+    targets: torch.Tensor,
+    alpha: float = 0.25,
+    gamma: float = 2,
+    reduction: str = "none",
+):
+    """
+    Original implementation from https://github.com/facebookresearch/fvcore/blob/master/fvcore/nn/focal_loss.py .
+    Loss used in RetinaNet for dense detection: https://arxiv.org/abs/1708.02002.
+
+    Args:
+        inputs: A float tensor of arbitrary shape.
+                The predictions for each example.
+        targets: A float tensor with the same shape as inputs. Stores the binary
+                classification label for each element in inputs
+                (0 for the negative class and 1 for the positive class).
+        alpha: (optional) Weighting factor in range (0,1) to balance
+                positive vs negative examples or -1 for ignore. Default = 0.25
+        gamma: Exponent of the modulating factor (1 - p_t) to
+               balance easy vs hard examples.
+        reduction: 'none' | 'mean' | 'sum'
+                 'none': No reduction will be applied to the output.
+                 'mean': The output will be averaged.
+                 'sum': The output will be summed.
+    Returns:
+        Loss tensor with the reduction option applied.
+    """
+    p = torch.sigmoid(inputs)
+    ce_loss = F.binary_cross_entropy_with_logits(
+        inputs, targets, reduction="none"
+    )
+    p_t = p * targets + (1 - p) * (1 - targets)
+    loss = ce_loss * ((1 - p_t) ** gamma)
+
+    if alpha >= 0:
+        alpha_t = alpha * targets + (1 - alpha) * (1 - targets)
+        loss = alpha_t * loss
+
+    if reduction == "mean":
+        loss = loss.mean()
+    elif reduction == "sum":
+        loss = loss.sum()
+
+    return loss
+
 def train(writer: SummaryWriter,
           model: nn.Module,
           train_loader: utils.data.DataLoader,
@@ -87,22 +137,35 @@ def validate(model: nn.Module,
     size_ds_train = len(val_loader.dataset)
     num_batches = len(val_loader)
 
+    samples_val = 0
+    regr_val = 0
+    loss_class_val = 0.
+    loss_regr_val = 0.
     model = model.eval()
 
     with torch.no_grad():
         for idx_batch, (images, targets) in enumerate(val_loader):
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+            list_dict = model(images, targets)
+            for ind, el in enumerate(list_dict):
 
-            loss_dict = model(images, targets)
+                loss_class = sigmoid_focal_loss(el['labels'],targets[ind]['labels'], reduction='sum')
+                loss_class_val += loss_class.item() * len(images)
+                loss_boxes_regr = torch.nn.functional.l1_loss(el['boxes'],targets[ind]['boxes'], reduction='sum')
+                loss_regr_val += loss_boxes_regr.item() * len(targets)
 
-            loss_class = loss_dict['classification']
-            loss_boxes_regr = loss_dict['bbox_regression']
-            losses = loss_class + loss_boxes_regr
+            samples_val += len(images)
+            regr_val += len(targets)
 
-    dict_losses_val = {'bbox_regression': loss_boxes_regr,
-                       'classification': loss_class,
-                       'sum': losses}
+    loss_class_val /= samples_val
+    loss_regr_val /= regr_val
+
+    loss_sum = loss_class_val + loss_regr_val
+
+    dict_losses_val = {'bbox_regression': loss_regr_val,
+                       'classification': loss_class_val,
+                       'sum': loss_sum}
     return dict_losses_val
 
 
@@ -288,8 +351,11 @@ def execute(name_train: str,
     writer.close()
 
     # Save the model
-    if not os.path.exists('../checkpoints'):
-        os.makedirs('../checkpoints')
+    if not os.path.exists(CHECKPOINT_ROOT):
+        os.makedirs(CHECKPOINT_ROOT)
+
+    path_checkpoint = os.path.join(CHECKPOINT_ROOT,
+                                   f'{name_train}_{num_epochs}_epochs.bin')
 
     path_checkpoint = os.path.join('../checkpoints',
                                    f'{name_train}_{num_epochs}_epochs.bin')
@@ -319,6 +385,6 @@ set_requires_grad_for_layer(retina_net.anchor_generator, True)
 set_requires_grad_for_layer(retina_net.head.classification_head, True)
 set_requires_grad_for_layer(retina_net.head.regression_head, True)
 
-retina_net.to(DEVICE)
+retina_net.to('cpu')
 #print(retina_net)
 

@@ -1,3 +1,5 @@
+import torch
+
 from data_loader import *
 from hyper_param import *
 from visualization import *
@@ -88,6 +90,7 @@ def main():
 
     name_train = "retina_net"
     launch_tensorboard(name_train)
+    retina_net = torch.load()
     execute(name_train, retina_net, LR, EPOCHS, loader_mi_train, loader_mi_val)
 
 
