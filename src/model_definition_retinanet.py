@@ -12,7 +12,7 @@ from timeit import default_timer as timer
 from PIL import Image
 from torch.optim import lr_scheduler
 from torch.utils.tensorboard import SummaryWriter
-
+from validation import validate
 import torch
 import torch.nn.functional as F
 
@@ -166,6 +166,7 @@ def validate(model: nn.Module,
     dict_losses_val = {'bbox_regression': loss_regr_val,
                        'classification': loss_class_val,
                        'sum': loss_sum}
+
     return dict_losses_val
 
 
@@ -212,6 +213,13 @@ def training_loop(writer: SummaryWriter,
         time_start = timer()
         losses_epoch_train = train(writer, model, loader_train, DEVICE,
                                    optimizer, log_interval, epoch)
+        if not os.path.exists(CHECKPOINT_ROOT):
+            os.makedirs(CHECKPOINT_ROOT)
+
+        path_checkpoint = os.path.join(CHECKPOINT_ROOT,
+                                       f'retina_net_{epoch}_epochs.bin')
+        torch.save(model.state_dict(), path_checkpoint)
+
         losses_epoch_val = validate(model, loader_val, DEVICE)
 
         loss_bb_train = losses_epoch_train['bbox_regression']
@@ -357,8 +365,7 @@ def execute(name_train: str,
     path_checkpoint = os.path.join(CHECKPOINT_ROOT,
                                    f'{name_train}_{num_epochs}_epochs.bin')
 
-    path_checkpoint = os.path.join('../checkpoints',
-                                   f'{name_train}_{num_epochs}_epochs.bin')
+
     torch.save(model.state_dict(), path_checkpoint)
 
 def set_requires_grad_for_layer(layer: torch.nn.Module, train: bool) -> None:

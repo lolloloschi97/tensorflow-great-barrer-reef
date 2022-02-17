@@ -1,10 +1,8 @@
-import torch
-
 from data_loader import *
 from hyper_param import *
 from visualization import *
 from evaluation import launch_tensorboard
-from model_definition_retinanet import retina_net, execute
+from model_definition_retinanet import retina_net, execute, validate
 from dataset_class_generation import *
 
 
@@ -90,7 +88,13 @@ def main():
 
     name_train = "retina_net"
     launch_tensorboard(name_train)
-    retina_net = torch.load()
+
+    retina_net.load_state_dict(torch.load(CHECKPOINT_ROOT + '/retina_net_1_epochs.bin'))
+
+    for epoch in range(3):
+      validate(retina_net,loader_mi_val,DEVICE)
+
+    quit()
     execute(name_train, retina_net, LR, EPOCHS, loader_mi_train, loader_mi_val)
 
 
