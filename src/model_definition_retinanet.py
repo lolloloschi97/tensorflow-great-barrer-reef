@@ -385,13 +385,11 @@ retina_net = retinanet_resnet50_fpn(pretrained = True,
                                     trainable_backbone_layers = None)
 
 
-retina_net.head.classification_head.cls_logits = nn.Conv2d(256, 18, kernel_size=(3, 3), stride =(1, 1), padding=(1, 1))
-retina_net.head.classification_head.num_classes = 2
+retina_net.head.classification_head.cls_logits = nn.Conv2d(256, 9, kernel_size=(3, 3), stride =(1, 1), padding=(1, 1))
+retina_net.head.classification_head.num_classes = 1
 set_requires_grad_for_layer(retina_net.backbone, False)
-set_requires_grad_for_layer(retina_net.anchor_generator, True)
+set_requires_grad_for_layer(retina_net.anchor_generator, False)
 set_requires_grad_for_layer(retina_net.head.classification_head, True)
-set_requires_grad_for_layer(retina_net.head.regression_head, True)
+set_requires_grad_for_layer(retina_net.head.regression_head, False)
 
-retina_net.to('cpu')
-#print(retina_net)
-
+retina_net.to(DEVICE)
