@@ -1,5 +1,6 @@
 from hyper_param import *
 from tqdm import tqdm
+from PIL import Image
 
 def compute_voc_ap(recall, precision, use_07_metric=True):
     if use_07_metric:
@@ -73,100 +74,101 @@ def validate(val_dataset, model, decoder):
 
 def evaluate_voc(val_dataset, model, decoder, num_classes=20, iou_thread=0.5):
     preds, gts = [], []
-    for index in tqdm(range(len(val_dataset))):
-        data = val_dataset[index]
-        img, gt_annot, scale = data['img'], data['annot'], data['scale']
+    with torch.no_grad():
+        with tqdm(val_dataset, unit="images") as tepoch:
+            for idx_batch, (images, targets) in enumerate(tepoch):
+                tepoch.set_description(f"Validation")
+                images = list(image.to(DEVICE) for image in images)
+                targets = [{k: v.to(DEVICE) for k, v in t.items()} for t in targets]
+                img = images[0]
+                img.to(DEVICE)
+                gt_bboxes, gt_classes = targets[0]['boxes'], targets[0]['labels']
+                gt_bboxes, gt_classes = gt_bboxes.cpu(), gt_classes.cpu()
+                gts.append([gt_bboxes, gt_classes])
 
-        gt_bboxes, gt_classes = gt_annot[:, 0:4], gt_annot[:, 4]
-        gt_bboxes /= scale
+                #cls_heads, reg_heads, batch_anchors = model(img.cuda().permute(
+                #    2, 0, 1).float().unsqueeze(0))
+                list_dict = model(images, targets)
+                preds_scores , preds_classes , preds_boxes = list_dict[0]['scores'], list_dict[0]['labels'], list_dict[0]['boxes']
+                preds_scores, preds_classes, preds_boxes = preds_scores.cpu(), preds_classes.cpu(), preds_boxes.cpu()
 
-        gts.append([gt_bboxes, gt_classes])
+                # make sure decode batch_size=1
+                # preds_scores shape:[1,max_detection_num]
+                # preds_classes shape:[1,max_detection_num]
+                # preds_bboxes shape[1,max_detection_num,4]
+                #assert preds_scores.shape[0] == 1
 
-        cls_heads, reg_heads, batch_anchors = model(img.cuda().permute(
-            2, 0, 1).float().unsqueeze(dim=0))
-        preds_scores, preds_classes, preds_boxes = decoder(
-            cls_heads, reg_heads, batch_anchors)
-        preds_scores, preds_classes, preds_boxes = preds_scores.cpu(
-        ), preds_classes.cpu(), preds_boxes.cpu()
-        preds_boxes /= scale
+                #preds_scores = preds_scores.squeeze(0)
+                #preds_classes = preds_classes.squeeze(0)
+                #preds_boxes = preds_boxes.squeeze(0)
 
-        # make sure decode batch_size=1
-        # preds_scores shape:[1,max_detection_num]
-        # preds_classes shape:[1,max_detection_num]
-        # preds_bboxes shape[1,max_detection_num,4]
-        assert preds_scores.shape[0] == 1
+                preds_scores = preds_scores[preds_classes < 1]
+                preds_boxes = preds_boxes[preds_classes < 1]
+                preds_classes = preds_classes[preds_classes < 1]
 
-        preds_scores = preds_scores.squeeze(0)
-        preds_classes = preds_classes.squeeze(0)
-        preds_boxes = preds_boxes.squeeze(0)
+                preds.append([preds_boxes, preds_classes, preds_scores])
 
-        preds_scores = preds_scores[preds_classes > -1]
-        preds_boxes = preds_boxes[preds_classes > -1]
-        preds_classes = preds_classes[preds_classes > -1]
+            print("all val sample decode done.")
 
-        preds.append([preds_boxes, preds_classes, preds_scores])
+        all_ap = {}
+        for class_index in tqdm(range(num_classes)):
+            per_class_gt_boxes = [
+                image[0][image[1] == class_index] for image in gts
+            ]
+            per_class_pred_boxes = [
+                image[0][image[1] == class_index] for image in preds
+            ]
+            per_class_pred_scores = [
+                image[2][image[1] == class_index] for image in preds
+            ]
 
-    print("all val sample decode done.")
+            fp = np.zeros((0, ))
+            tp = np.zeros((0, ))
+            scores = np.zeros((0, ))
+            total_gts = 0
 
-    all_ap = {}
-    for class_index in tqdm(range(num_classes)):
-        per_class_gt_boxes = [
-            image[0][image[1] == class_index] for image in gts
-        ]
-        per_class_pred_boxes = [
-            image[0][image[1] == class_index] for image in preds
-        ]
-        per_class_pred_scores = [
-            image[2][image[1] == class_index] for image in preds
-        ]
+            # loop for each sample
+            for per_image_gt_boxes, per_image_pred_boxes, per_image_pred_scores in zip(
+                    per_class_gt_boxes, per_class_pred_boxes,
+                    per_class_pred_scores):
+                total_gts = total_gts + len(per_image_gt_boxes)
+                # one gt can only be assigned to one predicted bbox
+                assigned_gt = []
+                # loop for each predicted bbox
+                for index in range(len(per_image_pred_boxes)):
+                    scores = np.append(scores, per_image_pred_scores[index])
+                    if per_image_gt_boxes.shape[0] == 0:
+                        # if no gts found for the predicted bbox, assign the bbox to fp
+                        fp = np.append(fp, 1)
+                        tp = np.append(tp, 0)
+                        continue
+                    pred_box = np.expand_dims(per_image_pred_boxes[index], axis=0)
+                    iou = compute_ious(per_image_gt_boxes, pred_box)
+                    gt_for_box = np.argmax(iou, axis=0)
+                    max_overlap = iou[gt_for_box, 0]
+                    if max_overlap >= iou_thread and gt_for_box not in assigned_gt:
+                        fp = np.append(fp, 0)
+                        tp = np.append(tp, 1)
+                        assigned_gt.append(gt_for_box)
+                    else:
+                        fp = np.append(fp, 1)
+                        tp = np.append(tp, 0)
+            # sort by score
+            indices = np.argsort(-scores)
+            fp = fp[indices]
+            tp = tp[indices]
+            # compute cumulative false positives and true positives
+            fp = np.cumsum(fp)
+            tp = np.cumsum(tp)
+            # compute recall and precision
+            recall = tp / total_gts
+            precision = tp / np.maximum(tp + fp, np.finfo(np.float64).eps)
+            ap = compute_voc_ap(recall, precision)
+            all_ap[class_index] = ap
 
-        fp = np.zeros((0, ))
-        tp = np.zeros((0, ))
-        scores = np.zeros((0, ))
-        total_gts = 0
-
-        # loop for each sample
-        for per_image_gt_boxes, per_image_pred_boxes, per_image_pred_scores in zip(
-                per_class_gt_boxes, per_class_pred_boxes,
-                per_class_pred_scores):
-            total_gts = total_gts + len(per_image_gt_boxes)
-            # one gt can only be assigned to one predicted bbox
-            assigned_gt = []
-            # loop for each predicted bbox
-            for index in range(len(per_image_pred_boxes)):
-                scores = np.append(scores, per_image_pred_scores[index])
-                if per_image_gt_boxes.shape[0] == 0:
-                    # if no gts found for the predicted bbox, assign the bbox to fp
-                    fp = np.append(fp, 1)
-                    tp = np.append(tp, 0)
-                    continue
-                pred_box = np.expand_dims(per_image_pred_boxes[index], axis=0)
-                iou = compute_ious(per_image_gt_boxes, pred_box)
-                gt_for_box = np.argmax(iou, axis=0)
-                max_overlap = iou[gt_for_box, 0]
-                if max_overlap >= iou_thread and gt_for_box not in assigned_gt:
-                    fp = np.append(fp, 0)
-                    tp = np.append(tp, 1)
-                    assigned_gt.append(gt_for_box)
-                else:
-                    fp = np.append(fp, 1)
-                    tp = np.append(tp, 0)
-        # sort by score
-        indices = np.argsort(-scores)
-        fp = fp[indices]
-        tp = tp[indices]
-        # compute cumulative false positives and true positives
-        fp = np.cumsum(fp)
-        tp = np.cumsum(tp)
-        # compute recall and precision
-        recall = tp / total_gts
-        precision = tp / np.maximum(tp + fp, np.finfo(np.float64).eps)
-        ap = compute_voc_ap(recall, precision)
-        all_ap[class_index] = ap
-
-    mAP = 0.
-    for _, class_mAP in all_ap.items():
-        mAP += float(class_mAP)
-    mAP /= num_classes
+        mAP = 0.
+        for _, class_mAP in all_ap.items():
+            mAP += float(class_mAP)
+        mAP /= num_classes
 
     return all_ap, mAP

@@ -79,7 +79,7 @@ def draw_boxes(image: Image,
 def show_img(data,index_sample=9):
     classes_mi = data.classes
     num_mi_classes = len(classes_mi)
-    colors_mi = generate_colors(num_mi_classes)
+    colors_mi = 'red'
 
     image, target = data[index_sample]
     boxes = target['boxes']

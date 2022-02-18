@@ -39,7 +39,6 @@ def load_datasets():
 def main():
     if LOAD_PICKELS:
         training_df, validation_df = load_datasets()
-
     else:
         training_df, validation_df = data_loader(TRAIN_SIZE)
         save_datasets(training_df, validation_df)
@@ -81,7 +80,7 @@ def main():
                                                   collate_fn= collate_fn)
 
     loader_mi_val = torch.utils.data.DataLoader(data_mi_val,
-                                                batch_size= BATCH_SIZE,
+                                                batch_size= 1,
                                                 shuffle=False,
                                                 num_workers= NUM_WORKER,
                                                 collate_fn= collate_fn)

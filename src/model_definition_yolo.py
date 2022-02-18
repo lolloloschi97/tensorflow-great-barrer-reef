@@ -39,10 +39,10 @@ def train(writer: utils.tensorboard.writer.SummaryWriter,
 
     model.train()
     for idx_batch, (images, targets) in enumerate(train_loader):
+        images = torch.stack(images)
         optimizer.zero_grad()
-        images = list(image.to(device) for image in images)
+        images = images.to(device)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-
 
         loss_dict = model(images, targets)
 
@@ -291,7 +291,9 @@ def execute(name_train: str,
                                    f'{name_train}_{num_epochs}_epochs.bin')
     torch.save(model.state_dict(), path_checkpoint)
 
+if torch.cuda.is_available:
+  print('All good, a Gpu is available')
+  device = torch.device("cuda:0")
 
-
-yolo = torch.hub.load('ultralytics/yolov5', 'yolov5s', device = DEVICE, classes = 1, autoshape = False, pretrained = True)  # load on GPU
-yolo.to(DEVICE)
+yolo = torch.hub.load('ultralytics/yolov5', 'yolov5s', classes=1, autoshape=False, pretrained=True)  # load on GPU
+yolo.to(device)

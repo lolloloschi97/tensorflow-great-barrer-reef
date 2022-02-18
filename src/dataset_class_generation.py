@@ -51,10 +51,8 @@ def create_annotations(df_path, df_name):
 
 def parse_annotations_file(path_to_file: str):
     """Parse annotation file generated with the OIDv4 ToolKit.
-
     Args:
         path_to_file: the path to the file with the annotations.
-
     Returns:
         The classes for each object in the image.
         The bounding boxes coordinates for each object in the image in
@@ -88,7 +86,6 @@ class GreatBarrerReef_Dataset(Dataset):
                  transforms: torchvision.transforms = None,
                  ) -> None:
         """Init the dataset
-
         Args:
             path_images: the path to the folder containing the images.
             ext_images: the extension of the images.
@@ -100,7 +97,7 @@ class GreatBarrerReef_Dataset(Dataset):
             [path for path in Path(path_folder + LABELS_ROOT).rglob(f"*.{ext_annotations}")]
         )
 
-        self.images = [path_folder + IMAGES_ROOT + str(el).split('/')[3].split('.')[0] + '.jpg' for el in
+        self.images = [path_folder + IMAGES_ROOT + str(el).split("\\")[3].split('.')[0] + '.jpg' for el in
                        self.annotations]
 
         self.transforms = transforms
@@ -132,6 +129,3 @@ class GreatBarrerReef_Dataset(Dataset):
 
     def __len__(self):
         return len(self.images)
-
-
-
