@@ -88,12 +88,12 @@ def main():
     name_train = "retina_net"
     launch_tensorboard(name_train)
 
-    retina_net.load_state_dict(torch.load(CHECKPOINT_ROOT + '/retina_net_1_epochs.bin'))
+    #retina_net.load_state_dict(torch.load(CHECKPOINT_ROOT + '/retina_net_1_epochs.bin'))
 
-    for epoch in range(3):
-      validate(retina_net,loader_mi_val,DEVICE)
+    #for epoch in range(3):
+    #  validate(retina_net,loader_mi_val,DEVICE)
 
-    quit()
+    #quit()
     execute(name_train, retina_net, LR, EPOCHS, loader_mi_train, loader_mi_val)
 
 
