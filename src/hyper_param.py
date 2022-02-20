@@ -33,7 +33,7 @@ RESHAPE = True
 RESHAPE_FACTOR = 4
 
 # training parameters
-EPOCHS = 10
+EPOCHS = 1
 LR = 1e-5
 BATCH_SIZE = 8
 NUM_WORKER = 2
