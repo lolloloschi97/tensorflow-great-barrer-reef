@@ -15,7 +15,7 @@ def data_loader(TRAIN_SIZE):
     return training_df, validation_df
 
 def rename_images():
-    for el in range(len(os.listdir(DATASET_ROOT + IMAGES_ROOT))):
+    for el in range(len(os.listdir(DATASET_ROOT + IMAGES_ROOT))-1):
         path = DATASET_ROOT + IMAGES_ROOT + "video_" + str(el) + "/"
         for image in os.listdir(path):
             old_file_name = path + image

@@ -29,15 +29,15 @@ LABELS_ROOT = "/labels/"
 #image dimensions
 IMAGE_WIDTH = 1280
 IMAGE_HEIGHT = 720
-RESHAPE = True
+RESHAPE = False
 RESHAPE_FACTOR = 4
 
 # training parameters
-EPOCHS = 1
+EPOCHS = 10
 LR = 1e-5
-BATCH_SIZE = 8
+BATCH_SIZE = 4
 NUM_WORKER = 2
-TRAIN_SIZE = 0.6
+TRAIN_SIZE = 0.9
 if torch.cuda.is_available:
     DEVICE = torch.device("cuda:0")
 else:

@@ -1,6 +1,7 @@
 from hyper_param import *
 from tqdm import tqdm
 from PIL import Image
+from torchvision.ops import box_iou
 
 def compute_voc_ap(recall, precision, use_07_metric=True):
     if use_07_metric:
@@ -58,18 +59,35 @@ def compute_ious(a, b):
     return iou
 
 
-def validate(val_dataset, model, decoder):
-    model = model.module
-    # switch to evaluate mode
-    model.eval()
-    with torch.no_grad():
-        all_ap, mAP = evaluate_voc(val_dataset,
-                                   model,
-                                   decoder,
-                                   num_classes=20,
-                                   iou_thread=0.5)
-
-    return all_ap, mAP
+def calculate_score(
+    preds: List[torch.Tensor],
+    gts: List[torch.Tensor],
+    iou_th: float
+) -> float:
+    num_tp = 0
+    num_fp = 0
+    num_fn = 0
+    for p, GT in zip(preds, gts):
+        if len(p) and len(GT):
+            gt = GT.clone()
+            gt[:, 2] = gt[:, 0] + gt[:, 2]
+            gt[:, 3] = gt[:, 1] + gt[:, 3]
+            pp = p.clone()
+            pp[:, 2] = pp[:, 0] + pp[:, 2]
+            pp[:, 3] = pp[:, 1] + pp[:, 3]
+            iou_matrix = box_iou(pp, gt)
+            tp = len(torch.where(iou_matrix.max(0)[0] >= iou_th)[0])
+            fp = len(p) - tp
+            fn = len(torch.where(iou_matrix.max(0)[0] < iou_th)[0])
+            num_tp += tp
+            num_fp += fp
+            num_fn += fn
+        elif len(p) == 0 and len(GT):
+            num_fn += len(GT)
+        elif len(p) and len(GT) == 0:
+            num_fp += len(p)
+    score = 5 * num_tp / (5 * num_tp + 4 * num_fn + num_fp)
+    return score
 
 
 def evaluate_voc(val_dataset, model, decoder, num_classes=20, iou_thread=0.5):
@@ -86,21 +104,9 @@ def evaluate_voc(val_dataset, model, decoder, num_classes=20, iou_thread=0.5):
                 gt_bboxes, gt_classes = gt_bboxes.cpu(), gt_classes.cpu()
                 gts.append([gt_bboxes, gt_classes])
 
-                #cls_heads, reg_heads, batch_anchors = model(img.cuda().permute(
-                #    2, 0, 1).float().unsqueeze(0))
                 list_dict = model(images, targets)
                 preds_scores , preds_classes , preds_boxes = list_dict[0]['scores'], list_dict[0]['labels'], list_dict[0]['boxes']
                 preds_scores, preds_classes, preds_boxes = preds_scores.cpu(), preds_classes.cpu(), preds_boxes.cpu()
-
-                # make sure decode batch_size=1
-                # preds_scores shape:[1,max_detection_num]
-                # preds_classes shape:[1,max_detection_num]
-                # preds_bboxes shape[1,max_detection_num,4]
-                #assert preds_scores.shape[0] == 1
-
-                #preds_scores = preds_scores.squeeze(0)
-                #preds_classes = preds_classes.squeeze(0)
-                #preds_boxes = preds_boxes.squeeze(0)
 
                 preds_scores = preds_scores[preds_classes < 1]
                 preds_boxes = preds_boxes[preds_classes < 1]
@@ -153,6 +159,9 @@ def evaluate_voc(val_dataset, model, decoder, num_classes=20, iou_thread=0.5):
                     else:
                         fp = np.append(fp, 1)
                         tp = np.append(tp, 0)
+
+            iou_ths = np.arange(0.3, 0.85, 0.05)
+            f2_scores = [calculate_score(per_class_pred_boxes, per_class_gt_boxes, iou_th) for iou_th in iou_ths]
             # sort by score
             indices = np.argsort(-scores)
             fp = fp[indices]
@@ -170,5 +179,7 @@ def evaluate_voc(val_dataset, model, decoder, num_classes=20, iou_thread=0.5):
         for _, class_mAP in all_ap.items():
             mAP += float(class_mAP)
         mAP /= num_classes
+
+    print('f2 score is: ', np.mean(f2_scores))
 
     return all_ap, mAP

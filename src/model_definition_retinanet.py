@@ -118,6 +118,7 @@ def train(writer: SummaryWriter,
                          'sum': losses}
     return dict_losses_train
 
+
 def validate(model: nn.Module,
             val_loader: torch.utils.data.DataLoader,
             device: torch.device) -> Dict[str, float]:
@@ -245,11 +246,10 @@ def training_loop(writer: SummaryWriter,
         lr = optimizer.param_groups[0]['lr']
 
         if verbose:
-            print(f'Epoch: {epoch} '
-                  f' Lr: {lr:.8f} '
-                  f' Losses Train: Sum = [{loss_sum_train:.4f}] Class = [{loss_class_train:.4f}] Boxes = [{loss_bb_train:.4f}]'
-                  f' Losses Val: Sum = [{loss_sum_val:.4f}] Class = [{loss_class_val:.4f}] Boxes = [{loss_bb_val:.4f}]'
-                  f' Time one epoch (s): {(time_end - time_start):.4f} ')
+            print(f''' Lr: {lr} 
+                  Losses Train: Sum = [{loss_sum_train}] Class = [{loss_class_train}] Boxes = [{loss_bb_train}]
+                  all ap Val = [{all_ap_epoch}] mAP = [{mAP_epoch}]
+                  Time one epoch (s): {(time_end - time_start)} ''')
 
         # Plot to tensorboard
         writer.add_scalar('Hyperparameters/Learning Rate', lr, epoch)
@@ -268,7 +268,7 @@ def training_loop(writer: SummaryWriter,
     loop_end = timer()
     time_loop = loop_end - loop_start
     if verbose:
-        print(f'Time for {num_epochs} epochs (s): {(time_loop):.3f}')
+        print(f'''Time for {num_epochs} epochs (s): {time_loop}''')
 
     return {'bbox_regression_train': losses_bb_values_train,
             'classification_train': losses_class_values_train,
@@ -382,14 +382,14 @@ def set_requires_grad_for_layer(layer: torch.nn.Module, train: bool) -> None:
 retina_net = retinanet_resnet50_fpn(pretrained = True,
                                     num_classes = 91,
                                     pretrained_backbone = True,
-                                    trainable_backbone_layers = None)
+                                    trainable_backbone_layers = 1)
 
 
 retina_net.head.classification_head.cls_logits = nn.Conv2d(256, 9, kernel_size=(3, 3), stride =(1, 1), padding=(1, 1))
 retina_net.head.classification_head.num_classes = 1
-set_requires_grad_for_layer(retina_net.backbone, False)
-set_requires_grad_for_layer(retina_net.anchor_generator, False)
+set_requires_grad_for_layer(retina_net.backbone, True)
+set_requires_grad_for_layer(retina_net.anchor_generator, True)
 set_requires_grad_for_layer(retina_net.head.classification_head, True)
-set_requires_grad_for_layer(retina_net.head.regression_head, False)
+set_requires_grad_for_layer(retina_net.head.regression_head, True)
 
 retina_net.to(DEVICE)

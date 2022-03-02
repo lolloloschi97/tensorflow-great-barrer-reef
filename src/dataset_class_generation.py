@@ -1,6 +1,7 @@
 from hyper_param import *
 from torch.utils.data import Dataset
 from torchvision import transforms
+from augmentation import random_flip, random_crop, center_crop
 from pathlib import Path
 from PIL import Image
 from hyper_param import *
@@ -84,7 +85,7 @@ class GreatBarrerReef_Dataset(Dataset):
                  ext_images: str,
                  ext_annotations: str,
                  transforms: torchvision.transforms = None,
-                 ) -> None:
+                 train: bool = True) -> None:
         """Init the dataset
         Args:
             path_images: the path to the folder containing the images.
@@ -92,6 +93,7 @@ class GreatBarrerReef_Dataset(Dataset):
             ext_annotations: the extension of the annotations.
             transforms: the transformation to apply to the dataset.
         """
+        self.train = train
         self.images = sorted([path for path in Path(path_folder + IMAGES_ROOT).rglob(f"*.{ext_images}")])
         self.annotations = sorted(
             [path for path in Path(path_folder + LABELS_ROOT).rglob(f"*.{ext_annotations}")]
@@ -121,6 +123,9 @@ class GreatBarrerReef_Dataset(Dataset):
         labels = torch.as_tensor(labels, dtype=torch.int64)
 
         target = {"boxes": boxes, "labels": labels}
+        if self.train:
+            image, boxes = random_flip(image, boxes)
+            #image, boxes = random_crop(image, boxes)
 
         if self.transforms is not None:
             image = self.transforms(image)
