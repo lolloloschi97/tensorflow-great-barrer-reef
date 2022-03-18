@@ -8,8 +8,7 @@ def data_loader(TRAIN_SIZE):
     df = pd.read_csv(path)
     if WITH_COLAB:
         df = df.loc[df['video_id']==0]
-    indexes = train_test_split(np.arange(df.shape[0]),train_size = TRAIN_SIZE, random_state = 1) #[[train_indexes],[val_indexes]]
-    #val_indexes = [i for i in range(df.shape[0]) if i not in train_indexes]
+    indexes = train_test_split(np.arange(df.shape[0]),train_size = TRAIN_SIZE, random_state = 1)
     training_df = df.loc[indexes[0],:]
     validation_df = df.loc[indexes[1],:]
     return training_df, validation_df

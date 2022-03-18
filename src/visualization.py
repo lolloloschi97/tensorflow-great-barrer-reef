@@ -4,23 +4,7 @@ import time
 import copy
 from typing import List
 from torchvision import transforms
-
-def generate_colors(num_colors: int) -> np.array:
-    """Generates an array with RGB triplets representing colors.
-
-    Args:
-        num_colors: the number of colors to generate.
-
-    Returns:
-        the generated colors.
-    """
-
-    np.random.seed(0)
-    colors = np.random.uniform(0, 255, size=(num_colors, 3))
-    time_in_ms = 1000 * time.time()
-    np.random.seed(int(time_in_ms) % 2 ** 32)
-
-    return colors
+from model_definition_retinanet import detect_objects
 
 def obtain_initial_coordinates(bbox):
     xmin = int((bbox[0] - (bbox[2] / 2)) * IMAGE_WIDTH)
@@ -67,7 +51,7 @@ def draw_boxes(image: Image,
     for i, (box, label) in enumerate(zip(boxes, labels)):
         color = 'red'
         x_min, y_min, x_max, y_max = box
-        # x_min, y_min, x_max, y_max = obtain_initial_coordinates(box)
+        # x_min, y_min, x_max, y_max = obtain_initial_coordinates(box) ONLY IF RESHAPE
 
         coord_bb = [int(x_min), int(y_min), int(x_max), int(y_max)]
         painter.rectangle(coord_bb, outline=color, width=2)
@@ -101,3 +85,45 @@ def show_img(data,index_sample=9):
     ax.imshow(cell_with_bb, aspect='auto')
     plt.show()
 
+
+def show_prediction(image,model,data_mi_train,val=False,targets=[]):
+
+    bounding_boxes, scores, categories, labels = detect_objects(image,
+                                                                model,
+                                                                0.25,
+                                                                data_mi_train.classes)
+    image = transforms.ToPILImage()(image[0])
+    image_with_bb_pred = draw_boxes(image,
+                                    bounding_boxes,
+                                    categories,
+                                    labels,
+                                    scores,
+                                    'red',
+                                    normalized_coordinates=False,
+                                    add_text=False)
+
+    if val:
+        image_with_bb_gt = draw_boxes(image,
+                                  targets["boxes"],
+                                  categories,
+                                  targets["labels"],
+                                  [1.0] * len(targets["boxes"]),
+                                  'red',
+                                  normalized_coordinates=False,
+                                  add_text=False)
+
+        plot_image = np.concatenate((image_with_bb_pred, image_with_bb_gt), axis=1)
+        fig, ax = plt.subplots(figsize=plt.figaspect(plot_image))
+        plt.axis('off')
+        fig.subplots_adjust(0, 0, 1, 0.9)
+        ax.imshow(plot_image)
+        ax.set_title("Prediction vs Groundtruth")
+    else:
+        plot_image = image_with_bb_pred
+        fig, ax = plt.subplots()
+        ax = plt.Axes(fig, [0., 0., 1., 1.])
+        ax.set_axis_off()
+        fig.add_axes(ax)
+
+    ax.imshow(plot_image, aspect='auto')
+    plt.show()

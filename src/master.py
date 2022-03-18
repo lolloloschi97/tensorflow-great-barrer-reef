@@ -8,6 +8,7 @@ from dataset_class_generation import *
 
 LOAD_PICKELS = True
 TRAINING = False
+VALIDATE = False
 
 def save_datasets(train_df, val_df):
     print("Renaming images..")
@@ -69,7 +70,7 @@ def main():
                                           train=False)
 
     # visualize image
-    show_img(data_mi_train)
+    show_img(data_mi_train,index_sample=64)
 
 
     # Data loaders
@@ -93,44 +94,23 @@ def main():
         execute(name_train, retina_net, LR, EPOCHS, loader_mi_train, loader_mi_val)
     else:
         retina_net.load_state_dict(torch.load(CHECKPOINT_ROOT + '/retina_net_10_epochs.bin'))
-        all_ap_epoch, mAP_epoch = validate(retina_net, loader_mi_val, DEVICE)
-
+        if VALIDATE:
+            all_ap_epoch, mAP_epoch = validate(retina_net, loader_mi_val, DEVICE)
 
     image, targets = data_mi_val[100]
     batch_image = image.unsqueeze(0)
     image = image.unsqueeze(0).to(DEVICE)
 
-    bounding_boxes, scores, categories, labels = detect_objects(image,
-                                                                retina_net,
-                                                                0.25,
-                                                                data_mi_train.classes)
-    image = transforms.ToPILImage()(image[0])
-    image_with_bb_pred = draw_boxes(image,
-                                    bounding_boxes,
-                                    categories,
-                                    labels,
-                                    scores,
-                                    'red',
-                                    normalized_coordinates=False,
-                                    add_text=False)
+    show_prediction(image,retina_net,data_mi_train,val=True,targets=targets)
 
-    image_with_bb_gt = draw_boxes(image,
-                                  targets["boxes"],
-                                  categories,
-                                  targets["labels"],
-                                  [1.0] * len(targets["boxes"]),
-                                  'red',
-                                  normalized_coordinates=False,
-                                  add_text=False)
+    #testing
+    test_image = "../test_image2.jpg"
+    test = Image.open(test_image).convert("RGB")
+    convert_tensor = transforms.ToTensor()
+    test = convert_tensor(test)
+    test = test.unsqueeze(0).to(DEVICE)
 
-    plot_image = np.concatenate((image_with_bb_pred, image_with_bb_gt), axis=1)
-    fig, ax = plt.subplots(figsize=plt.figaspect(plot_image))
-    plt.axis('off')
-    fig.subplots_adjust(0, 0,1, 0.9)
-    ax.imshow(plot_image)
-    ax.set_title("Prediction vs Groundtruth")
-    plt.show()
-
+    show_prediction(test,retina_net,data_mi_train)
 
 if __name__ == '__main__':
     main()
