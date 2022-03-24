@@ -70,11 +70,11 @@ def calculate_score(
     for p, GT in zip(preds, gts):
         if len(p) and len(GT):
             gt = GT.clone()
-            gt[:, 2] = gt[:, 0] + gt[:, 2]
-            gt[:, 3] = gt[:, 1] + gt[:, 3]
+            #gt[:, 2] = gt[:, 0] + gt[:, 2]
+            #gt[:, 3] = gt[:, 1] + gt[:, 3]
             pp = p.clone()
-            pp[:, 2] = pp[:, 0] + pp[:, 2]
-            pp[:, 3] = pp[:, 1] + pp[:, 3]
+            #pp[:, 2] = pp[:, 0] + pp[:, 2]
+            #pp[:, 3] = pp[:, 1] + pp[:, 3]
             iou_matrix = box_iou(pp, gt)
             tp = len(torch.where(iou_matrix.max(0)[0] >= iou_th)[0])
             fp = len(p) - tp
