@@ -26,5 +26,5 @@ We can observe that not all crown-of-thorns starfish are correctly recognized an
 
 ### Contribution
 - [Lorenzo Loschi](https://github.com/lolloloschi97)
-- [Irene Rachele Lavopa](https://www.linkedin.com/in/irene-rachele-lavopa)
+- [Irene Rachele Lavopa](https://github.com/irenelavopa)
 
