@@ -1,7 +1,7 @@
 # Help Protect the Great Barrier Reef
 
 ### Abstract
-The project is about *object detection* of crown-of-thorns starfish in underwater image data. The reference Dataset has been taken from the Kaggle Challenge [https://www.kaggle.com/competitions/tensorflow-great-barrier-reef]. <br/> 
+The project is about *object detection* of crown-of-thorns starfish in underwater image data. The reference Dataset has been taken from the [Kaggle Challenge](https://www.kaggle.com/competitions/tensorflow-great-barrier-reef). <br/> 
 
 ### Implementation
 After properly preprocessing the dataset, we have exploited **RetinaNet** architecture with a ResNet50-FPN as backbone, pretrained on coco 2017. In order to obtain a coherent prediction, we performed a *fine-tuning* on our data of the last stage of the backbone architecture
@@ -25,5 +25,5 @@ We can observe that not all crown-of-thorns starfish are correctly recognized an
 </p>
 
 ### Contribution
-- Lorenzo Loschi
-- Irene Rachele Lavopa
+- [Lorenzo Loschi](https://github.com/lolloloschi97)
+- [Irene Rachele Lavopa](https://www.linkedin.com/in/irene-rachele-lavopa)
